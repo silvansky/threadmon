@@ -10,7 +10,6 @@ all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	$(CC) $(LOPTS) -o $@ $^
-	codesign -s "ThreadmonCert" ./$@
 
 .c.o:
 	$(CC) -c $(OPTS) $<

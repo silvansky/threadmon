@@ -35,12 +35,13 @@ int main(int argc, char *argv[])
 {
 	if (argc != 2)
 	{
+		printf("Usage:\n    %s <PID>\n", argv[0]);
 		return -1;
 	}
 
 	if (acquireTaskportRight())
 	{
-		printf("No rights granted by user! Terminating.\n");
+		printf("No rights granted by user or some error occured! Terminating.\n");
 		return 0;
 	}
 
