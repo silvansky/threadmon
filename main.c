@@ -1,3 +1,15 @@
+//
+//  main.c
+//  threadmon
+//
+//  Created by V. Silvansky on 25/09/2012.
+//  Copyright (c) 2012 V. Silvansky. All rights reserved.
+//
+// This software is distributed under GPLv3 licence.
+// See COPYING for more information.
+//
+
+
 #include <stdio.h> 
 #include <unistd.h> 
 #include <sys/types.h> 
