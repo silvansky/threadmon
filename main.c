@@ -20,6 +20,13 @@
 
 #include <Security/Authorization.h>
 
+#define STATUS_SUCCESS             0
+#define STATUS_ERR_NO_ARGS        -1
+#define STATUS_ERR_INVALID_PID    -2
+#define STATUS_ERR_TASK_FOR_PID   -3
+#define STATUS_ERR_TASK_INFO      -4
+#define STATUS_ERR_TASK_THREADS   -5
+
 int acquireTaskportRight()
 {
 	OSStatus stat;
@@ -48,7 +55,7 @@ int main(int argc, char *argv[])
 	if (argc != 2)
 	{
 		printf("Usage:\n    %s <PID>\n", argv[0]);
-		return -1;
+		return STATUS_ERR_NO_ARGS;
 	}
 
 	if (acquireTaskportRight())
@@ -62,23 +69,28 @@ int main(int argc, char *argv[])
 	if (*end)
 	{
 		printf("Error: invalid PID given: \"%s\", terminating.\n", argv[1]);
-		return -2;
+		return STATUS_ERR_INVALID_PID;
 	}
 
 	printf("Starting threadmon for PID %d\n", pid);
 
 	task_t port;
-	task_for_pid(mach_task_self(), pid, &port);
+	kern_return_t kr = task_for_pid(mach_task_self(), pid, &port);
+	if (kr != KERN_SUCCESS)
+	{
+		printf("task_for_pid() returned %d, terminating.\n", kr);
+		return STATUS_ERR_TASK_FOR_PID;
+	}
 
 	task_info_data_t tinfo;
 	mach_msg_type_number_t task_info_count;
 
 	task_info_count = TASK_INFO_MAX;
-	int kr = task_info(port, TASK_BASIC_INFO, (task_info_t)tinfo, &task_info_count);
+	kr = task_info(port, TASK_BASIC_INFO, (task_info_t)tinfo, &task_info_count);
 	if (kr != KERN_SUCCESS)
 	{
 		printf("task_info() returned %d, terminating.\n", kr);
-		return -3;
+		return STATUS_ERR_TASK_INFO;
 	}
 
 	task_basic_info_t basic_info;
@@ -98,7 +110,7 @@ int main(int argc, char *argv[])
 	if (kr != KERN_SUCCESS)
 	{
 		printf("task_threads() returned %d, terminating.\n", kr);
-		return -4;
+		return STATUS_ERR_TASK_THREADS;
 	}
 	if (thread_count > 0)
 	{
