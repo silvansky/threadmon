@@ -57,7 +57,13 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	pid_t pid = strtol(argv[1], (char **)NULL, 10);
+	char* end;
+	pid_t pid = strtol(argv[1], &end, 10);
+	if (*end)
+	{
+		printf("Error: invalid PID given: \"%s\", terminating.\n", argv[1]);
+		return -2;
+	}
 
 	printf("Starting threadmon for PID %d\n", pid);
 
@@ -72,7 +78,7 @@ int main(int argc, char *argv[])
 	if (kr != KERN_SUCCESS)
 	{
 		printf("task_info() returned %d, terminating.\n", kr);
-		return -2;
+		return -3;
 	}
 
 	task_basic_info_t basic_info;
@@ -92,7 +98,7 @@ int main(int argc, char *argv[])
 	if (kr != KERN_SUCCESS)
 	{
 		printf("task_threads() returned %d, terminating.\n", kr);
-		return -3;
+		return -4;
 	}
 	if (thread_count > 0)
 	{
