@@ -10,21 +10,21 @@
 //
 
 
-#include <stdio.h> 
-#include <unistd.h> 
-#include <sys/types.h> 
-#include <sys/ptrace.h> 
-#include <mach/mach.h> 
-#include <errno.h> 
-#include <stdlib.h> 
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/ptrace.h>
+#include <mach/mach.h>
+#include <errno.h>
+#include <stdlib.h>
 
 #include <Security/Authorization.h>
 
 #define STATUS_SUCCESS             0
 #define STATUS_ERR_NO_ARGS        -1
-#define STATUS_ERR_INVALID_PID    -2
-#define STATUS_ERR_TASK_FOR_PID   -3
-#define STATUS_ERR_TASK_INFO      -4
+#define STATUS_ERR_NO_RIGHTS      -2
+#define STATUS_ERR_INVALID_PID    -3
+#define STATUS_ERR_TASK_FOR_PID   -4
 #define STATUS_ERR_TASK_THREADS   -5
 
 int acquireTaskportRight()
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 	if (acquireTaskportRight())
 	{
 		printf("No rights granted by user or some error occured! Terminating.\n");
-		return 0;
+		return STATUS_ERR_NO_RIGHTS;
 	}
 
 	char* end;
@@ -82,18 +82,6 @@ int main(int argc, char *argv[])
 		return STATUS_ERR_TASK_FOR_PID;
 	}
 
-	task_info_data_t tinfo;
-	mach_msg_type_number_t task_info_count;
-
-	task_info_count = TASK_INFO_MAX;
-	kr = task_info(port, TASK_BASIC_INFO, (task_info_t)tinfo, &task_info_count);
-	if (kr != KERN_SUCCESS)
-	{
-		printf("task_info() returned %d, terminating.\n", kr);
-		return STATUS_ERR_TASK_INFO;
-	}
-
-	task_basic_info_t basic_info;
 	thread_array_t thread_list;
 	mach_msg_type_number_t thread_count;
 
@@ -101,9 +89,6 @@ int main(int argc, char *argv[])
 	mach_msg_type_number_t thread_info_count;
 
 	thread_basic_info_t basic_info_th;
-	uint32_t stat_thread = 0; // Mach threads
-
-	basic_info = (task_basic_info_t)tinfo;
 
 	// get threads in the task
 	kr = task_threads(port, &thread_list, &thread_count);
@@ -111,10 +96,6 @@ int main(int argc, char *argv[])
 	{
 		printf("task_threads() returned %d, terminating.\n", kr);
 		return STATUS_ERR_TASK_THREADS;
-	}
-	if (thread_count > 0)
-	{
-		stat_thread += thread_count;
 	}
 
 	long tot_sec = 0;
@@ -126,7 +107,7 @@ int main(int argc, char *argv[])
 	{
 		thread_info_count = THREAD_INFO_MAX;
 		kr = thread_info(thread_list[j], THREAD_BASIC_INFO, (thread_info_t)thinfo, &thread_info_count);
-		if (kr != KERN_SUCCESS) 
+		if (kr != KERN_SUCCESS)
 		{
 			printf("Thread %d: Error %d\n", thread_list[j], kr);
 			continue;
@@ -142,5 +123,5 @@ int main(int argc, char *argv[])
 		}
 	}
 	printf("---\nTotal: CPU %ld%%\n", tot_cpu);
-	return 0;
+	return STATUS_SUCCESS;
 }
