@@ -22,10 +22,9 @@
 
 #define STATUS_SUCCESS             0
 #define STATUS_ERR_NO_ARGS        -1
-#define STATUS_ERR_NO_RIGHTS      -2
-#define STATUS_ERR_INVALID_PID    -3
-#define STATUS_ERR_TASK_FOR_PID   -4
-#define STATUS_ERR_TASK_THREADS   -5
+#define STATUS_ERR_INVALID_PID    -2
+#define STATUS_ERR_TASK_FOR_PID   -3
+#define STATUS_ERR_TASK_THREADS   -4
 
 int acquireTaskportRight()
 {
@@ -61,7 +60,7 @@ int main(int argc, char *argv[])
 	if (acquireTaskportRight())
 	{
 		printf("No rights granted by user or some error occured! Terminating.\n");
-		return STATUS_ERR_NO_RIGHTS;
+		return 0;
 	}
 
 	char* end;
@@ -98,8 +97,6 @@ int main(int argc, char *argv[])
 		return STATUS_ERR_TASK_THREADS;
 	}
 
-	long tot_sec = 0;
-	long tot_usec = 0;
 	long tot_cpu = 0;
 	int j;
 
@@ -116,8 +113,6 @@ int main(int argc, char *argv[])
 
 		if (!(basic_info_th->flags & TH_FLAGS_IDLE))
 		{
-			tot_sec = tot_sec + basic_info_th->user_time.seconds + basic_info_th->system_time.seconds;
-			tot_usec = tot_usec + basic_info_th->system_time.microseconds + basic_info_th->system_time.microseconds;
 			tot_cpu = tot_cpu + basic_info_th->cpu_usage;
 			printf("Thread %d: CPU %d%%\n", thread_list[j], basic_info_th->cpu_usage);
 		}
